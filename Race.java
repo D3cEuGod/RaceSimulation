@@ -19,40 +19,52 @@ public class Race {
     }
 
     public void startRace() {
-        int[] positions = new int[numLanes];
         boolean raceOngoing = true;
 
         while (raceOngoing) {
             clearScreen();
             raceOngoing = false;
-            
+
             for (int i = 0; i < numLanes; i++) {
-                if (lanes[i] != null && !lanes[i].isEliminated()) {
-                    // Simulate movement and possible fall
-                    double speed = lanes[i].getSpeed();
-                    positions[i] += (int) speed;
-                    
-                    if (random.nextDouble() < lanes[i].getConfidence() * 0.1) { // Higher confidence, higher fall chance
-                        lanes[i].fall();
+                Horse horse = lanes[i];
+                if (horse != null && !horse.hasFallen()) {
+                    // Move forward
+                    if (Math.random() < horse.getConfidence()) {
+                        horse.moveForward();
                     }
-                    
-                    raceOngoing |= positions[i] < raceLength;
+
+                    // Simulate fall (confidence affects risk)
+                    if (Math.random() < horse.getConfidence() * 0.1) {
+                        horse.fall();
+                        horse.setConfidence(Math.max(0, horse.getConfidence() - 0.05)); // optional penalty
+                    }
+
+                    // Check if horse reached the finish line
+                    raceOngoing |= horse.getDistanceTravelled() < raceLength;
                 }
             }
-            displayRace(positions);
+
+            displayRace(); // No argument now
             try {
                 Thread.sleep(500); // Animation delay
             } catch (InterruptedException e) {
                 Thread.currentThread().interrupt();
             }
         }
-        displayResults(positions);
-    }
 
-    private void displayRace(int[] positions) {
+        displayResults();
+    }
+    
+
+
+    private void displayRace() {
         for (int i = 0; i < numLanes; i++) {
-            if (lanes[i] != null) {
-                System.out.println("|" + " ".repeat(positions[i]) + lanes[i].getSymbol());
+            Horse horse = lanes[i];
+            if (horse != null) {
+                String symbol = horse.hasFallen() ? "❌" : String.valueOf(horse.getSymbol());
+                int pos = horse.getDistanceTravelled();
+                System.out.println("|" + " ".repeat(pos) + symbol);
+                System.out.println("| " + horse.getName() + " (Current confidence " + String.format("%.2f", horse.getConfidence()) + ")");
             } else {
                 System.out.println("|");
             }
@@ -60,21 +72,31 @@ public class Race {
         System.out.println("=".repeat(raceLength));
     }
 
-    private void displayResults(int[] positions) {
+
+    private void displayResults() {
         System.out.println("Race Finished! Results:");
-        List<Horse> sortedHorses = new ArrayList<>();
-        for (int i = 0; i < numLanes; i++) {
-            if (lanes[i] != null && !lanes[i].isEliminated()) {
-                sortedHorses.add(lanes[i]);
+
+        Horse winner = null;
+        int maxDistance = -1;
+
+        for (Horse horse : lanes) {
+            if (horse != null && !horse.hasFallen()) {
+                int distance = horse.getDistanceTravelled();
+                if (distance > maxDistance) {
+                    winner = horse;
+                    maxDistance = distance;
+                }
             }
         }
-        sortedHorses.sort(Comparator.comparingInt(h -> -positions[Arrays.asList(lanes).indexOf(h)]));
-        
-        for (int i = 0; i < sortedHorses.size(); i++) {
-            sortedHorses.get(i).winRace();
-            System.out.println((i + 1) + ". " + sortedHorses.get(i).getName());
+
+        if (winner != null) {
+            winner.setConfidence(Math.min(1.0, winner.getConfidence() + 0.05)); // Optional reward
+            System.out.println("And the winner is… " + winner.getName() + "!");
+        } else {
+            System.out.println("No horses finished the race.");
         }
     }
+
 
     private void clearScreen() {
         System.out.print("\033[H\033[2J");

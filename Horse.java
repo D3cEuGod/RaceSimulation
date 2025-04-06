@@ -1,14 +1,51 @@
 public class Horse {
+    // Fields (private to enforce encapsulation)
     private String name;
     private char symbol;
-    private boolean eliminated;
-    private double confidence; // Value between 0 and 1
+    private int distanceTravelled;
+    private boolean hasFallen;
+    private double confidence;
 
-    public Horse(String name, char symbol, double confidence) {
-        this.name = name;
-        this.symbol = symbol;
-        this.eliminated = false;
-        setConfidence(confidence);
+    // Constructor
+    public Horse(char horseSymbol, String horseName, double horseConfidence) {
+        this.symbol = horseSymbol;
+        this.name = horseName;
+        this.confidence = horseConfidence;
+        this.distanceTravelled = 0;
+        this.hasFallen = false;
+    }
+
+    // Mutator (setter) methods
+    public void fall() {
+        hasFallen = true;
+    }
+
+    public void goBackToStart() {
+        distanceTravelled = 0;
+        hasFallen = false;
+    }
+
+    public void moveForward() {
+        distanceTravelled += 1;
+    }
+
+    public void setConfidence(double newConfidence) {
+        if (newConfidence >= 0.0 && newConfidence <= 1.0) {
+            confidence = newConfidence;
+        }
+    }
+
+    public void setSymbol(char newSymbol) {
+        symbol = newSymbol;
+    }
+
+    // Accessor (getter) methods
+    public double getConfidence() {
+        return confidence;
+    }
+
+    public int getDistanceTravelled() {
+        return distanceTravelled;
     }
 
     public String getName() {
@@ -19,37 +56,7 @@ public class Horse {
         return symbol;
     }
 
-    public boolean isEliminated() {
-        return eliminated;
-    }
-
-    public double getConfidence() {
-        return confidence;
-    }
-
-    public void setConfidence(double confidence) {
-        this.confidence = Math.max(0, Math.min(1, confidence)); // Ensure within bounds
-    }
-
-    public void eliminate() {
-        this.eliminated = true;
-    }
-
-    public void winRace() {
-        setConfidence(confidence + 0.05); // Slightly increase confidence
-    }
-
-    public void fall() {
-        eliminate();
-        setConfidence(confidence - 0.05); // Slightly decrease confidence
-    }
-
-    public double getSpeed() {
-        return 5 + (confidence * 5); // Example: Base speed + confidence impact
-    }
-
-    @Override
-    public String toString() {
-        return name + " (" + symbol + ") - " + (eliminated ? "Eliminated" : "Active") + ", Confidence: " + confidence;
+    public boolean hasFallen() {
+        return hasFallen;
     }
 }
