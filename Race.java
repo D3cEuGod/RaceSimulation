@@ -29,10 +29,10 @@ public class Race {
                 Horse horse = lanes[i];
                 if (horse != null && !horse.hasFallen()) {
                     // Calculate speed based on horse's confidence
-                    double speed = horse.getConfidence() * 2; // Confidence affects speed, can adjust this factor
+                    double speed = horse.getConfidence() * 3; // Confidence affects speed, can adjust this factor
 
                     // Simulate movement: Horses move forward by their speed (could be a random factor)
-                    if (Math.random() < 0.75) { // Random chance to move forward
+                    if (Math.random() < 0.95) { // Random chance to move forward
                         horse.moveForward(); // Move the horse forward
                     }
 
