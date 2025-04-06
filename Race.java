@@ -28,15 +28,18 @@ public class Race {
             for (int i = 0; i < numLanes; i++) {
                 Horse horse = lanes[i];
                 if (horse != null && !horse.hasFallen()) {
-                    // Move forward
-                    if (Math.random() < horse.getConfidence()) {
-                        horse.moveForward();
+                    // Calculate speed based on horse's confidence
+                    double speed = horse.getConfidence() * 2; // Confidence affects speed, can adjust this factor
+
+                    // Simulate movement: Horses move forward by their speed (could be a random factor)
+                    if (Math.random() < 0.75) { // Random chance to move forward
+                        horse.moveForward(); // Move the horse forward
                     }
 
-                    // Simulate fall (confidence affects risk)
-                    if (Math.random() < horse.getConfidence() * 0.1) {
+                    // Simulate fall (confidence affects fall chance)
+                    if (Math.random() < horse.getConfidence() * 0.1) { // Increased confidence = higher fall chance
                         horse.fall();
-                        horse.setConfidence(Math.max(0, horse.getConfidence() - 0.05)); // optional penalty
+                        horse.setConfidence(Math.max(0, horse.getConfidence() - 0.05)); // Penalty for falling
                     }
 
                     // Check if horse reached the finish line
@@ -44,7 +47,7 @@ public class Race {
                 }
             }
 
-            displayRace(); // No argument now
+            displayRace(); // Display race progress
             try {
                 Thread.sleep(500); // Animation delay
             } catch (InterruptedException e) {
@@ -52,8 +55,9 @@ public class Race {
             }
         }
 
-        displayResults();
+        displayResults(); // Show the results after the race is finished
     }
+    
     
 
 
