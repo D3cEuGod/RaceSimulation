@@ -6,7 +6,7 @@
         Horse horse3 = new Horse('❌', "EL JEFE", 0.4);
 
         // Create race with length 30 meters and 3 lanes
-        Race race = new Race(30, 3);
+        Race race = new Race(10, 3);
 
         // Add horses to race
         race.addHorse(horse1, 0); // Horse 1 in lane 0
