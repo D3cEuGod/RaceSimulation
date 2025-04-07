@@ -37,7 +37,7 @@ public class Race {
                     }
 
                     // Simulate fall (confidence affects fall chance)
-                    if (Math.random() < horse.getConfidence() * 0.1) { // Increased confidence = higher fall chance
+                    if (Math.random() < horse.getConfidence() * 0.07) { // Increased confidence = higher fall chance
                         horse.fall();
                         horse.setConfidence(Math.max(0, horse.getConfidence() - 0.05)); // Penalty for falling
                     }

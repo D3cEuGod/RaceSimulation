@@ -1,9 +1,9 @@
  public class Main {
     public static void main(String[] args) {
         // Create horses
-        Horse horse1 = new Horse('♘', "PIPPI LONGSTOCKING", 0.6);
-        Horse horse2 = new Horse('♞', "KOKOMO", 0.7);
-        Horse horse3 = new Horse('❌', "EL JEFE", 0.4);
+        Horse horse1 = new Horse('♘', "PIPPI LONGSTOCKING", 0.7);
+        Horse horse2 = new Horse('♞', "KOKOMO", 0.8);
+        Horse horse3 = new Horse('1', "EL JEFE", 0.5);
 
         // Create race with length 30 meters and 3 lanes
         Race race = new Race(10, 3);
