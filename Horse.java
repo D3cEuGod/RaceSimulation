@@ -20,11 +20,6 @@ public class Horse {
         hasFallen = true;
     }
 
-    public void goBackToStart() {
-        distanceTravelled = 0;
-        hasFallen = false;
-    }
-
     public void moveForward() {
         distanceTravelled += 1;
     }
