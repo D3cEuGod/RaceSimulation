@@ -1,181 +1,143 @@
 import javax.swing.*;
 import java.awt.*;
-import java.util.*;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
 
 public class RaceGUI extends JFrame {
-    private int raceLength;
-    private int numLanes;
-    private Horse[] lanes;
-    private Random random = new Random();
-    private JPanel racePanel;
-    private JLabel[] laneLabels;
-    private boolean raceOngoing;
+    private JPanel trackConfigPanel;
+    private JPanel raceControlPanel;
+    private JPanel raceVisualizationPanel;
 
-    public RaceGUI(int raceLength, int numLanes) {
-        this.raceLength = raceLength;
-        this.numLanes = numLanes;
-        this.lanes = new Horse[numLanes];
-        this.raceOngoing = false;
+    // Components for track configuration
+    private JSpinner laneCountSpinner;
+    private JTextField trackLengthField;
+    private JComboBox<String> trackShapeComboBox;
+    private JComboBox<String> weatherConditionComboBox;
 
-        // Set up the JFrame
-        setTitle("Horse Race");
-        setSize(600, 400);
+    // Components for race control
+    private JButton startRaceButton;
+    private JButton resetButton;
+    private JSlider speedSlider;
+
+    // For race visualization
+    private Race race;
+
+    public RaceGUI() {
+        setTitle("Race Simulator");
+        setSize(800, 600);
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         setLayout(new BorderLayout());
 
-        // Panel to hold race lanes
-        racePanel = new JPanel();
-        racePanel.setLayout(new GridLayout(numLanes, 1));
-        laneLabels = new JLabel[numLanes];
+        // Track configuration panel
+        trackConfigPanel = new JPanel();
+        trackConfigPanel.setLayout(new GridLayout(4, 2)); // 4 rows, 2 columns
+        addTrackConfigComponents();
 
-        // Add labels for each lane
-        for (int i = 0; i < numLanes; i++) {
-            laneLabels[i] = new JLabel("Lane " + (i + 1) + ": ");
-            laneLabels[i].setFont(new Font("Arial", Font.PLAIN, 16));
-            racePanel.add(laneLabels[i]);
-        }
+        // Race control panel
+        raceControlPanel = new JPanel();
+        raceControlPanel.setLayout(new FlowLayout());
+        addRaceControlComponents();
 
-        // Add the race panel to the frame
-        add(racePanel, BorderLayout.CENTER);
+        // Race visualization panel (empty for now)
+        raceVisualizationPanel = new JPanel() {
+            @Override
+            protected void paintComponent(Graphics g) {
+                super.paintComponent(g);
+                if (race != null) {
+                    race.displayRace(g); // Draw the race on the panel
+                }
+            }
+        };
+        raceVisualizationPanel.setPreferredSize(new Dimension(800, 300));
+        add(raceVisualizationPanel, BorderLayout.CENTER);
 
-        // Button to start the race
-        JButton startButton = new JButton("Start Race");
-        startButton.addActionListener(e -> startRace());
-        add(startButton, BorderLayout.SOUTH);
+        // Add panels to frame
+        add(trackConfigPanel, BorderLayout.NORTH);
+        add(raceControlPanel, BorderLayout.SOUTH);
 
-        // Show the frame
         setVisible(true);
     }
 
-    public void addHorse(Horse horse, int lane) {
-        if (lane >= 0 && lane < numLanes && lanes[lane] == null) {
-            lanes[lane] = horse;
-        }
+    private void addTrackConfigComponents() {
+        // Lane count spinner
+        trackConfigPanel.add(new JLabel("Number of Lanes:"));
+        laneCountSpinner = new JSpinner(new SpinnerNumberModel(2, 1, 10, 1));
+        trackConfigPanel.add(laneCountSpinner);
+
+        // Track length field
+        trackConfigPanel.add(new JLabel("Track Length (m):"));
+        trackLengthField = new JTextField("1000");
+        trackConfigPanel.add(trackLengthField);
+
+        // Track shape combo box
+        trackConfigPanel.add(new JLabel("Track Shape:"));
+        String[] shapes = {"Oval", "Figure-eight", "Custom"};
+        trackShapeComboBox = new JComboBox<>(shapes);
+        trackConfigPanel.add(trackShapeComboBox);
+
+        // Weather condition combo box
+        trackConfigPanel.add(new JLabel("Weather Condition:"));
+        String[] weatherConditions = {"Dry", "Muddy", "Icy"};
+        weatherConditionComboBox = new JComboBox<>(weatherConditions);
+        trackConfigPanel.add(weatherConditionComboBox);
     }
 
-    public void startRace() {
-        raceOngoing = true;
-        new Thread(() -> {
-            while (raceOngoing) {
-                for (int i = 0; i < numLanes; i++) {
-                    Horse horse = lanes[i];
-                    if (horse != null && !horse.hasFallen()) {
-                        // Calculate speed based on horse's confidence
-                        double speed = horse.getConfidence() * 3;
-
-                        // Simulate movement: Horses move forward by their speed (could be a random factor)
-                        if (Math.random() < 0.95) { 
-                            horse.moveForward(); 
-                        }
-
-                        // Simulate fall (confidence affects fall chance)
-                        if (Math.random() < (1.0 - horse.getConfidence()) * 0.07) { 
-                            horse.fall();
-                            horse.setConfidence(Math.max(0, horse.getConfidence() - 0.05)); 
-                        }
-
-                        // Check if horse reached the finish line
-                        if (horse.getDistanceTravelled() >= raceLength) {
-                            raceOngoing = false;
-                        }
-                    }
-                }
-                updateRacePanel();
-                try {
-                    Thread.sleep(500); // Delay between race steps
-                } catch (InterruptedException e) {
-                    Thread.currentThread().interrupt();
-                }
+    private void addRaceControlComponents() {
+        // Start race button
+        startRaceButton = new JButton("Start Race");
+        startRaceButton.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                startRace();
             }
+        });
+        raceControlPanel.add(startRaceButton);
 
-            displayResults();
-        }).start();
+        // Reset button
+        resetButton = new JButton("Reset");
+        resetButton.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                resetTrackConfig();
+            }
+        });
+        raceControlPanel.add(resetButton);
+
+        // Speed control slider
+        raceControlPanel.add(new JLabel("Race Speed:"));
+        speedSlider = new JSlider(1, 10, 5);
+        raceControlPanel.add(speedSlider);
     }
 
-    private void updateRacePanel() {
-        for (int i = 0; i < numLanes; i++) {
-            Horse horse = lanes[i];
-            if (horse != null) {
-                String status = horse.hasFallen() ? "❌" : String.valueOf(horse.getSymbol());
-                int distance = horse.getDistanceTravelled();
-                laneLabels[i].setText("Lane " + (i + 1) + ": " + status + " " + " ".repeat(distance) + "|");
-            }
-        }
+    private void startRace() {
+        // Get values from the GUI
+        int laneCount = (Integer) laneCountSpinner.getValue();
+        int trackLength = Integer.parseInt(trackLengthField.getText());
+        String trackShape = (String) trackShapeComboBox.getSelectedItem();
+        String weatherCondition = (String) weatherConditionComboBox.getSelectedItem();
+
+        // Create a new Race object with these parameters and pass 'this' (the current RaceGUI instance)
+        race = new Race(trackLength, laneCount, trackShape, weatherCondition, this);
+
+        // Start the race simulation
+        race.startRace();
+        raceVisualizationPanel.repaint();
     }
 
-    private void displayResults() {
-        Horse winner = null;
-        int maxDistance = -1;
+    private void resetTrackConfig() {
+        // Reset GUI components to default values
+        laneCountSpinner.setValue(2);
+        trackLengthField.setText("1000");
+        trackShapeComboBox.setSelectedIndex(0);
+        weatherConditionComboBox.setSelectedIndex(0);
+    }
 
-        for (Horse horse : lanes) {
-            if (horse != null && !horse.hasFallen()) {
-                int distance = horse.getDistanceTravelled();
-                if (distance > maxDistance) {
-                    winner = horse;
-                    maxDistance = distance;
-                }
-            }
-        }
-
-        String resultMessage = (winner != null) ? "And the winner is… " + winner.getName() + "!" : "No horses finished the race.";
-        JOptionPane.showMessageDialog(this, resultMessage, "Race Finished", JOptionPane.INFORMATION_MESSAGE);
+    public void displayResults() {
+        // Show a simple dialog with the race result
+        JOptionPane.showMessageDialog(this, "The race has finished!");
     }
 
     public static void main(String[] args) {
-        RaceGUI raceGUI = new RaceGUI(30, 3); // 30 meters, 3 lanes
-        // Add horses to lanes
-        raceGUI.addHorse(new Horse("PIPPI LONGSTOCKING", '♘', 0.6), 0);
-        raceGUI.addHorse(new Horse("KOKOMO", '♞', 0.6), 1);
-        raceGUI.addHorse(new Horse("EL JEFE", '2', 0.4), 2);
-    }
-}
-
-class Horse {
-    private String name;
-    private char symbol;
-    private double confidence;
-    private int distanceTravelled;
-    private boolean hasFallen;
-
-    public Horse(String name, char symbol, double confidence) {
-        this.name = name;
-        this.symbol = symbol;
-        this.confidence = confidence;
-        this.distanceTravelled = 0;
-        this.hasFallen = false;
-    }
-
-    public String getName() {
-        return name;
-    }
-
-    public char getSymbol() {
-        return symbol;
-    }
-
-    public double getConfidence() {
-        return confidence;
-    }
-
-    public void setConfidence(double confidence) {
-        this.confidence = confidence;
-    }
-
-    public int getDistanceTravelled() {
-        return distanceTravelled;
-    }
-
-    public boolean hasFallen() {
-        return hasFallen;
-    }
-
-    public void fall() {
-        hasFallen = true;
-    }
-
-    public void moveForward() {
-        if (!hasFallen) {
-            distanceTravelled++;
-        }
+        new RaceGUI();
     }
 }
