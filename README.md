@@ -1,11 +1,14 @@
 
 # Instructions to the Horse racing
 
-==========================================
 # Textual RaceSimulation
 RaceSimulation Project for OOP
 
 For the textual project, you should run the main class by using terminal on mac, or command prompt on windows.
+
+Use the "cd" command to go to the directory "RaceSimulation"
+
+It should be already in the branch "main", if not, type command "git switch main"
 
 Use the "cd" command to go to the directory "Textual"
 
