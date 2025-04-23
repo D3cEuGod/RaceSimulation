@@ -1,0 +1,1 @@
+Instructions to the Horse racing GUI

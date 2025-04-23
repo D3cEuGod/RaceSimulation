@@ -1,7 +1,8 @@
 import javax.swing.*;
 import java.awt.*;
-import java.awt.event.ActionEvent;
-import java.awt.event.ActionListener;
+import java.awt.event.*;
+import java.util.ArrayList;
+import java.util.List;
 
 public class RaceGUI extends JFrame {
     private JPanel trackConfigPanel;
@@ -19,8 +20,9 @@ public class RaceGUI extends JFrame {
     private JButton resetButton;
     private JSlider speedSlider;
 
-    // For race visualization
     private Race race;
+
+    private List<JTextField> horseNameFields = new ArrayList<>();
 
     public RaceGUI() {
         setTitle("Race Simulator");
@@ -30,28 +32,18 @@ public class RaceGUI extends JFrame {
 
         // Track configuration panel
         trackConfigPanel = new JPanel();
-        trackConfigPanel.setLayout(new GridLayout(4, 2)); // 4 rows, 2 columns
+        trackConfigPanel.setLayout(new GridLayout(6, 2)); // More rows to fit horse names
         addTrackConfigComponents();
 
         // Race control panel
-        raceControlPanel = new JPanel();
-        raceControlPanel.setLayout(new FlowLayout());
+        raceControlPanel = new JPanel(new FlowLayout());
         addRaceControlComponents();
 
-        // Race visualization panel (empty for now)
-        raceVisualizationPanel = new JPanel() {
-            @Override
-            protected void paintComponent(Graphics g) {
-                super.paintComponent(g);
-                if (race != null) {
-                    race.displayRace(g); // Draw the race on the panel
-                }
-            }
-        };
-        raceVisualizationPanel.setPreferredSize(new Dimension(800, 300));
+        // Visualization panel placeholder
+        raceVisualizationPanel = new JPanel();
         add(raceVisualizationPanel, BorderLayout.CENTER);
 
-        // Add panels to frame
+        // Add config and control panels
         add(trackConfigPanel, BorderLayout.NORTH);
         add(raceControlPanel, BorderLayout.SOUTH);
 
@@ -64,80 +56,94 @@ public class RaceGUI extends JFrame {
         laneCountSpinner = new JSpinner(new SpinnerNumberModel(2, 1, 10, 1));
         trackConfigPanel.add(laneCountSpinner);
 
-        // Track length field
+        // Track length
         trackConfigPanel.add(new JLabel("Track Length (m):"));
-        trackLengthField = new JTextField("1000");
+        trackLengthField = new JTextField("50");
         trackConfigPanel.add(trackLengthField);
 
-        // Track shape combo box
+        // Track shape
         trackConfigPanel.add(new JLabel("Track Shape:"));
-        String[] shapes = {"Oval", "Figure-eight", "Custom"};
-        trackShapeComboBox = new JComboBox<>(shapes);
+        trackShapeComboBox = new JComboBox<>(new String[]{"Oval", "Figure-eight", "Custom"});
         trackConfigPanel.add(trackShapeComboBox);
 
-        // Weather condition combo box
+        // Weather
         trackConfigPanel.add(new JLabel("Weather Condition:"));
-        String[] weatherConditions = {"Dry", "Muddy", "Icy"};
-        weatherConditionComboBox = new JComboBox<>(weatherConditions);
+        weatherConditionComboBox = new JComboBox<>(new String[]{"Dry", "Muddy", "Icy"});
         trackConfigPanel.add(weatherConditionComboBox);
+
+        // Horse names
+        trackConfigPanel.add(new JLabel("Horse Names:"));
+        JPanel namesPanel = new JPanel(new GridLayout(1, 2)); // Default for 2 horses
+        horseNameFields.clear();
+        for (int i = 0; i < 2; i++) {
+            JTextField field = new JTextField("Horse " + (i + 1));
+            horseNameFields.add(field);
+            namesPanel.add(field);
+        }
+        trackConfigPanel.add(namesPanel);
+
+        // Update horse name fields dynamically
+        laneCountSpinner.addChangeListener(e -> {
+            int count = (Integer) laneCountSpinner.getValue();
+            namesPanel.removeAll();
+            horseNameFields.clear();
+            for (int i = 0; i < count; i++) {
+                JTextField field = new JTextField("Horse " + (i + 1));
+                horseNameFields.add(field);
+                namesPanel.add(field);
+            }
+            namesPanel.revalidate();
+            namesPanel.repaint();
+        });
     }
 
     private void addRaceControlComponents() {
-        // Start race button
         startRaceButton = new JButton("Start Race");
-        startRaceButton.addActionListener(new ActionListener() {
-            @Override
-            public void actionPerformed(ActionEvent e) {
-                startRace();
-            }
-        });
+        startRaceButton.addActionListener(e -> startRace());
         raceControlPanel.add(startRaceButton);
 
-        // Reset button
         resetButton = new JButton("Reset");
-        resetButton.addActionListener(new ActionListener() {
-            @Override
-            public void actionPerformed(ActionEvent e) {
-                resetTrackConfig();
-            }
-        });
+        resetButton.addActionListener(e -> resetTrackConfig());
         raceControlPanel.add(resetButton);
 
-        // Speed control slider
         raceControlPanel.add(new JLabel("Race Speed:"));
         speedSlider = new JSlider(1, 10, 5);
         raceControlPanel.add(speedSlider);
     }
 
     private void startRace() {
-        // Get values from the GUI
         int laneCount = (Integer) laneCountSpinner.getValue();
         int trackLength = Integer.parseInt(trackLengthField.getText());
         String trackShape = (String) trackShapeComboBox.getSelectedItem();
         String weatherCondition = (String) weatherConditionComboBox.getSelectedItem();
 
-        // Create a new Race object with these parameters and pass 'this' (the current RaceGUI instance)
         race = new Race(trackLength, laneCount, trackShape, weatherCondition, this);
 
-        // Start the race simulation
-        race.startRace();
-        raceVisualizationPanel.repaint();
+        for (int i = 0; i < laneCount; i++) {
+            String horseName = horseNameFields.get(i).getText().trim();
+            if (horseName.isEmpty()) {
+                horseName = "Horse " + (i + 1);
+            }
+            Horse horse = new Horse((char) ('A' + i), horseName, 0.8);
+            race.addHorse(horse, i);
+        }
+
+        // Open race viewer
+        new RaceViewer(race);
     }
 
     private void resetTrackConfig() {
-        // Reset GUI components to default values
         laneCountSpinner.setValue(2);
         trackLengthField.setText("1000");
         trackShapeComboBox.setSelectedIndex(0);
         weatherConditionComboBox.setSelectedIndex(0);
-    }
-
-    public void displayResults() {
-        // Show a simple dialog with the race result
-        JOptionPane.showMessageDialog(this, "The race has finished!");
+        for (int i = 0; i < horseNameFields.size(); i++) {
+            horseNameFields.get(i).setText("Horse " + (i + 1));
+        }
     }
 
     public static void main(String[] args) {
-        new RaceGUI();
+        SwingUtilities.invokeLater(RaceGUI::new);
     }
 }
+

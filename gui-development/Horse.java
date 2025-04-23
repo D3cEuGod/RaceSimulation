@@ -20,8 +20,8 @@ public class Horse {
         hasFallen = true;
     }
 
-    public void moveForward() {
-        distanceTravelled += 1;
+    public void moveForward(int steps) {
+        distanceTravelled += steps;
     }
 
     public void setConfidence(double newConfidence) {
