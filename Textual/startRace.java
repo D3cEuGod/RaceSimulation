@@ -1,4 +1,4 @@
- public class Main {
+ public class startRace {
     public static void main(String[] args) {
         // Create horses
         Horse horse1 = new Horse('♘', "PIPPI LONGSTOCKING", 0.7);
