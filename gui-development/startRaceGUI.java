@@ -1,4 +1,4 @@
-public class Main {
+public class startRaceGUI {
     public static void main(String[] args) {
         // Start the GUI application
         javax.swing.SwingUtilities.invokeLater(new Runnable() {
