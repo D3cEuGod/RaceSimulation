@@ -1,5 +1,4 @@
 import javax.swing.*;
-import java.util.*;
 import java.awt.*;
 
 public class Race {
@@ -7,11 +6,13 @@ public class Race {
     private int numLanes;
     private Horse[] lanes;
     private boolean raceOngoing = true;
+    private String weatherCondition; // 🆕 Added
 
     public Race(int raceLength, int numLanes, String trackShape, String weatherCondition, RaceGUI gui) {
         this.raceLength = raceLength;
         this.numLanes = numLanes;
         this.lanes = new Horse[numLanes];
+        this.weatherCondition = weatherCondition; // 🆕 Save the weather condition
     }
 
     public void addHorse(Horse horse, int lane) {
@@ -21,17 +22,30 @@ public class Race {
     }
 
     public void advanceRaceTick() {
-        raceOngoing = false; // Assume it's over, prove otherwise
+        raceOngoing = false; // Assume race is over unless proven otherwise
+
         for (int i = 0; i < numLanes; i++) {
             Horse horse = lanes[i];
             if (horse != null && !horse.hasFallen()) {
                 if (Math.random() < 0.95) {
-                    // Move horse forward by a larger step (e.g., proportional to confidence)
-		    int step = (int)(horse.getConfidence() * 3 + 1); // at least 1
-		    horse.moveForward(step); // update moveForward method to take steps
+                    int step = (int)(horse.getConfidence() * 3 + 1);
+
+                    // 🌧️ Weather effect on movement
+                    if ("Muddy".equalsIgnoreCase(weatherCondition)) {
+                        step = Math.max(1, step - 1); // Slower movement on muddy track
+                    }
+
+                    horse.moveForward(step);
                 }
 
-                if (Math.random() < horse.getConfidence() * 0.03) {
+                double fallChance = horse.getConfidence() * 0.03;
+
+                // ❄️ Weather effect on fall chance
+                if ("Icy".equalsIgnoreCase(weatherCondition)) {
+                    fallChance *= 2; // Higher risk of falling on ice
+                }
+
+                if (Math.random() < fallChance) {
                     horse.fall();
                     horse.setConfidence(Math.max(0, horse.getConfidence() - 0.05));
                 }
@@ -92,3 +106,4 @@ public class Race {
         return null;
     }
 }
+
