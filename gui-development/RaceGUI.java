@@ -22,6 +22,7 @@ public class RaceGUI extends JFrame {
     private Race race;
 
     private List<HorseConfig> horseConfigs = new ArrayList<>();
+    private List<Horse> horsePool = new ArrayList<>();
 
     public RaceGUI() {
         setTitle("Race Simulator");
@@ -108,9 +109,13 @@ public class RaceGUI extends JFrame {
 	JButton viewRecordsButton = new JButton("View Records");
 	viewRecordsButton.addActionListener(e -> openRecordsWindow());
 
+	JButton viewHistoryButton = new JButton("View History");
+        viewHistoryButton.addActionListener(e -> openHistoryWindow());
+
         controlPanel.add(startRaceButton);
         controlPanel.add(resetButton);
 	controlPanel.add(viewRecordsButton);
+	controlPanel.add(viewHistoryButton);  
         controlPanel.add(toggleFullscreenButton);
 
         return controlPanel;
@@ -183,32 +188,42 @@ public class RaceGUI extends JFrame {
         String trackShape = (String) trackShapeComboBox.getSelectedItem();
         String weatherCondition = (String) weatherConditionComboBox.getSelectedItem();
 
-        race = new Race(trackLength, laneCount, trackShape, weatherCondition, this);
+	// 1) Adjust horsePool size
+        if (horsePool.size() > laneCount) {
+            horsePool.subList(laneCount, horsePool.size()).clear();
+        }
+        while (horsePool.size() < laneCount) {
+            // Symbol and name here are placeholders; we'll overwrite them below
+            horsePool.add(new Horse('A', "Horse", 0.8));
+        }
 
+	race = new Race(trackLength, laneCount, trackShape, weatherCondition, this);
+
+        // 2) Reset each Horse for the new race and apply current config
         for (int i = 0; i < laneCount; i++) {
-            HorseConfig config = horseConfigs.get(i);
-            String horseName = config.nameField.getText().trim();
-            if (horseName.isEmpty()) {
-                horseName = "Horse " + (i + 1);
-            }
-            char symbol = ((String) config.symbolBox.getSelectedItem()).charAt(0);
-            String breed = (String) config.breedBox.getSelectedItem();
-            String equipment = (String) config.equipmentBox.getSelectedItem();
+            Horse h = horsePool.get(i);
+            h.resetForRace();
 
-            double confidence = 0.8;
-            if ("Thoroughbred".equals(breed)) {
-                confidence += 0.1;
-            } else if ("Arabian".equals(breed)) {
-                confidence += 0.05;
-            } else if ("Shire".equals(breed)) {
-                confidence -= 0.05;
-            }
+            HorseConfig cfg = horseConfigs.get(i);
+            String horseName = cfg.nameField.getText().trim();
+            if (horseName.isEmpty()) horseName = "Horse " + (i + 1);
+	    h.setName(horseName);
+            char symbol = ((String)cfg.symbolBox.getSelectedItem()).charAt(0);
+            String breed = (String)cfg.breedBox.getSelectedItem();
+            String equipment = (String)cfg.equipmentBox.getSelectedItem();
 
-            Horse horse = new Horse(symbol, horseName, confidence);
-            horse.setBreed(breed);
-            horse.setEquipment(equipment);
+            double baseConfidence = 0.8;
+            if ("Thoroughbred".equals(breed))      baseConfidence += 0.1;
+            else if ("Arabian".equals(breed))      baseConfidence += 0.05;
+            else if ("Shire".equals(breed))        baseConfidence -= 0.05;
 
-            race.addHorse(horse, i);
+            h.setSymbol(symbol);
+            h.setBreed(breed);
+            h.setEquipment(equipment);
+            h.setConfidence(baseConfidence);
+            h.setFinishingTimeTicks(-1);  // ensure reset
+
+            race.addHorse(h, i);
         }
 
         new RaceViewer(race);
@@ -239,6 +254,15 @@ public class RaceGUI extends JFrame {
         }
     }
 
+    private void openHistoryWindow() {
+        if (race != null) {
+            new HistoryWindow(race);
+        } else {
+            JOptionPane.showMessageDialog(this,
+                "No race data yet!",
+                "Warning", JOptionPane.WARNING_MESSAGE);
+        }
+    }
 
     public static void main(String[] args) {
         SwingUtilities.invokeLater(RaceGUI::new);

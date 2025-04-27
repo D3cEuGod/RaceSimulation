@@ -7,7 +7,8 @@ public class Race {
     private Horse[] lanes;
     private boolean raceOngoing = true;
     private String weatherCondition;
-    private int raceTicks = 0; // 🆕 Count how many ticks the race has taken
+
+    private int raceTicks = 0;  // ── NEW: count ticks in this race
 
     public Race(int raceLength, int numLanes, String trackShape, String weatherCondition, RaceGUI gui) {
         this.raceLength = raceLength;
@@ -17,77 +18,51 @@ public class Race {
     }
 
     public void addHorse(Horse horse, int lane) {
-        if (lane >= 0 && lane < numLanes && lanes[lane] == null) {
+        if (lane>=0 && lane<numLanes && lanes[lane]==null) {
             lanes[lane] = horse;
         }
     }
 
     public void advanceRaceTick() {
-        raceTicks++; // 🆕 Increment race ticks
+        raceTicks++;  // ── NEW
 
-        raceOngoing = false; // Assume race is over unless a horse still running
-
+        raceOngoing = false;
         for (int i = 0; i < numLanes; i++) {
-            Horse horse = lanes[i];
-            if (horse != null && !horse.hasFallen()) {
-                if (Math.random() < 0.95) {
-                    int step = (int)(horse.getConfidence() * 3 + 1);
+            Horse h = lanes[i];
+            if (h==null || h.hasFallen()) continue;
 
-                    // Weather effects
-                    if ("Muddy".equalsIgnoreCase(weatherCondition)) {
-                        step = Math.max(1, step - 1);
-                    }
+            // movement & fall logic (unchanged, plus finishing time)
+            if (Math.random() < 0.95) {
+                int step = (int)(h.getConfidence()*3 + 1);
+                if ("Muddy".equalsIgnoreCase(weatherCondition)) step = Math.max(1, step-1);
+                if ("Arabian".equals(h.getBreed())) step++;
+                else if ("Shire".equals(h.getBreed())) step = Math.max(1,step-1);
+                if ("Speed Shoes".equals(h.getEquipment())) step++;
+                else if ("Heavy Armor".equals(h.getEquipment())) step = Math.max(1,step-1);
+                h.moveForward(step);
+            }
 
-                    // Breed effects
-                    if ("Arabian".equals(horse.getBreed())) {
-                        step += 1;
-                    } else if ("Shire".equals(horse.getBreed())) {
-                        step = Math.max(1, step - 1);
-                    }
+            double fallChance = h.getConfidence()*0.03;
+            if ("Icy".equalsIgnoreCase(weatherCondition)) fallChance *= 2;
+            if ("Speed Shoes".equals(h.getEquipment())) fallChance *= 1.2;
+            else if ("Heavy Armor".equals(h.getEquipment())) fallChance *= 0.8;
+            if (Math.random()<fallChance) {
+                h.fall();
+                h.setConfidence(Math.max(0, h.getConfidence()-0.05));
+            }
 
-                    // Equipment effects
-                    if ("Speed Shoes".equals(horse.getEquipment())) {
-                        step += 1;
-                    } else if ("Heavy Armor".equals(horse.getEquipment())) {
-                        step = Math.max(1, step - 1);
-                    }
+            // record finishing time at the moment crossing line
+            if (h.getDistanceTravelled()>=raceLength && h.getFinishingTimeTicks()==-1) {
+                h.setFinishingTimeTicks(raceTicks);
+            }
 
-                    horse.moveForward(step);
-                }
-
-                double fallChance = horse.getConfidence() * 0.03;
-
-                // Weather effect on falling
-                if ("Icy".equalsIgnoreCase(weatherCondition)) {
-                    fallChance *= 2;
-                }
-
-                // Equipment effects on falling
-                if ("Speed Shoes".equals(horse.getEquipment())) {
-                    fallChance *= 1.2;
-                } else if ("Heavy Armor".equals(horse.getEquipment())) {
-                    fallChance *= 0.8;
-                }
-
-                if (Math.random() < fallChance) {
-                    horse.fall();
-                    horse.setConfidence(Math.max(0, horse.getConfidence() - 0.05));
-                }
-
-                if (horse.getDistanceTravelled() >= raceLength && horse.getFinishingTimeTicks() == -1) {
-                    horse.setFinishingTimeTicks(raceTicks); // 🆕 Record finishing time
-                }
-
-                if (horse.getDistanceTravelled() < raceLength) {
-                    raceOngoing = true;
-                }
+            if (h.getDistanceTravelled() < raceLength) {
+                raceOngoing = true;
             }
         }
     }
 
-    public boolean isRaceOngoing() {
-        return raceOngoing;
-    }
+    public boolean isRaceOngoing() { return raceOngoing; }
 
     public void displayRace(Graphics g) {
         for (int i = 0; i < numLanes; i++) {
@@ -106,73 +81,47 @@ public class Race {
     }
 
     public void displayResultsInViewer(Component parent) {
-        Horse winner = null;
-        int maxDistance = -1;
-
-        for (Horse horse : lanes) {
-            if (horse != null && !horse.hasFallen()) {
-                int distance = horse.getDistanceTravelled();
-                if (distance > maxDistance) {
-                    winner = horse;
-                    maxDistance = distance;
-                }
+        Horse winner = null; int maxDist = -1;
+        for (Horse h : lanes) {
+            if (h!=null && !h.hasFallen() && h.getDistanceTravelled()>maxDist) {
+                winner = h; maxDist = h.getDistanceTravelled();
             }
         }
 
-        if (winner != null) {
-            winner.setConfidence(Math.min(1.0, winner.getConfidence() + 0.05));
-            winner.incrementWins(); // 🆕 Record win
-            JOptionPane.showMessageDialog(parent, "🏆 The winner is: " + winner.getName());
+        if (winner!=null) {
+            winner.incrementWins();
+            winner.setConfidence(Math.min(1.0, winner.getConfidence()+0.05));
+            JOptionPane.showMessageDialog(parent, "🏆 Winner: "+winner.getName());
         } else {
-            JOptionPane.showMessageDialog(parent, "No horses finished the race!");
+            JOptionPane.showMessageDialog(parent, "No horse finished!");
         }
 
-        // 📝 Show Performance Report
-        StringBuilder report = new StringBuilder();
-        report.append("Race Performance Report:\n\n");
-        for (Horse horse : lanes) {
-            if (horse != null) {
-                double avgSpeed = horse.getDistanceTravelled() / (double) Math.max(1, horse.getFinishingTimeTicks());
-                report.append(horse.getName()).append(" (").append(horse.getBreed()).append(")\n")
-                      .append(" - Distance: ").append(horse.getDistanceTravelled()).append(" m\n")
-                      .append(" - Finishing Time: ").append(horse.getFinishingTimeTicks() == -1 ? "Did not finish" : horse.getFinishingTimeTicks() + " ticks").append("\n")
-                      .append(" - Avg Speed: ").append(String.format("%.2f", avgSpeed)).append(" m/tick\n")
-                      .append(" - Total Wins: ").append(horse.getTotalWins()).append("\n")
-                      .append(" - Confidence History: ").append(horse.getConfidenceHistory()).append("\n\n");
+        // ── Performance & history recording ─────────────────────────────────────
+        StringBuilder rpt = new StringBuilder("Race Report:\n\n");
+        for (Horse h : lanes) {
+            if (h==null) continue;
+            int ft = h.getFinishingTimeTicks();
+            double avg = h.getDistanceTravelled() / (double)Math.max(1, ft);
+            rpt.append(h.getName()).append(" [").append(h.getBreed()).append("]\n")
+               .append(" • Time: ").append(ft==-1?"DNF":ft+" ticks").append("\n")
+               .append(" • Avg Speed: ").append(String.format("%.2f",avg)).append("\n")
+               .append(" • Wins: ").append(h.getTotalWins()).append("\n\n");
 
-                horse.recordConfidence(); // 🆕 Save confidence after race
-		// Update best times for each track condition
-		if (horse.getFinishingTimeTicks() != -1) { // Only update if horse finished
-    		    String condition = weatherCondition;
-   		    int previousBest = horse.getBestTimeForCondition(condition);
-
-    		    if (previousBest == -1 || horse.getFinishingTimeTicks() < previousBest) {
-        	        horse.setBestTimeForCondition(condition, horse.getFinishingTimeTicks());
-    		    }
-		}
-            }
+            // ── NEW: record into history lists ─────────────────────────────
+            h.recordRaceResult(ft, h.getDistanceTravelled(), h.getConfidence());
+            // ─────────────────────────────────────────────────────────────────
         }
 
-        JTextArea textArea = new JTextArea(report.toString());
-        textArea.setEditable(false);
-        textArea.setFont(new Font("Monospaced", Font.PLAIN, 12));
-        JScrollPane scrollPane = new JScrollPane(textArea);
-
-        JOptionPane.showMessageDialog(parent, scrollPane, "Race Stats", JOptionPane.INFORMATION_MESSAGE);
+        JTextArea ta = new JTextArea(rpt.toString());
+        ta.setFont(new Font("Monospaced",Font.PLAIN,12));
+        ta.setEditable(false);
+        JOptionPane.showMessageDialog(parent, new JScrollPane(ta), "Race Stats",
+                                      JOptionPane.INFORMATION_MESSAGE);
     }
 
-    public Horse getHorseAtLane(int lane) {
-        if (lane >= 0 && lane < numLanes) {
-            return lanes[lane];
-        }
-        return null;
+    public Horse getHorseAtLane(int lane) { 
+        return (lane>=0 && lane<numLanes) ? lanes[lane] : null; 
     }
-
-    public int getNumLanes() {
-        return numLanes;
-    }
-
-    public int getRaceLength() {
-        return raceLength;
-    }
+    public int   getNumLanes()    { return numLanes; }
+    public int   getRaceLength()  { return raceLength; }
 }

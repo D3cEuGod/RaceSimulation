@@ -1,33 +1,43 @@
 import java.util.List;
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.Map;
+import java.util.HashMap;
 
 public class Horse {
-    // Fields (private to enforce encapsulation)
+    // Core fields
     private String name;
     private char symbol;
     private int distanceTravelled;
     private boolean hasFallen;
     private double confidence;
+
+    // Breed & Equipment
     private String breed;
     private String equipment;
-    private int finishingTimeTicks = -1; // How many ticks to finish
-    private int totalWins = 0; // How many races won
-    private List<Double> confidenceHistory = new ArrayList<>(); // Store confidence after each race
+
+    // Per‐race performance metrics
+    private int finishingTimeTicks = -1;
+    private int totalWins = 0;
+
+    // Historical data
+    private List<Integer> finishingTimeHistory = new ArrayList<>();
+    private List<Double>  avgSpeedHistory       = new ArrayList<>();
+    private List<Double>  confidenceHistory     = new ArrayList<>();
+
+    // Best times by track condition
     private Map<String, Integer> bestTimesByTrackCondition = new HashMap<>();
 
-
     // Constructor
-    public Horse(char horseSymbol, String horseName, double horseConfidence) {
-        this.symbol = horseSymbol;
-        this.name = horseName;
-        this.confidence = horseConfidence;
+    public Horse(char symbol, String name, double confidence) {
+        this.symbol = symbol;
+        this.name = name;
+        this.confidence = confidence;
         this.distanceTravelled = 0;
         this.hasFallen = false;
     }
 
-    // Mutator (setter) methods
+    // ──────────────────────────────────────────────────────────────────────────
+    // Mutation methods
     public void fall() {
         hasFallen = true;
     }
@@ -45,9 +55,9 @@ public class Horse {
     public void setSymbol(char newSymbol) {
         symbol = newSymbol;
     }
-	
+
     public void setBreed(String breed) {
-    	this.breed = breed;
+        this.breed = breed;
     }
 
     public void setEquipment(String equipment) {
@@ -55,22 +65,34 @@ public class Horse {
     }
 
     public void setFinishingTimeTicks(int ticks) {
-    	this.finishingTimeTicks = ticks;
+        this.finishingTimeTicks = ticks;
+    }
+
+    public void setName(String name) {
+        this.name = name;
+    }
+
+    public void incrementWins() {
+        totalWins++;
     }
 
     public void setBestTimeForCondition(String condition, int time) {
-    	bestTimesByTrackCondition.put(condition, time);
+        bestTimesByTrackCondition.put(condition, time);
     }
+    // ──────────────────────────────────────────────────────────────────────────
 
-    // Accessor (getter) methods
-    public double getConfidence() {
-        return confidence;
+    // ──────────────────────────────────────────────────────────────────────────
+    // Per‐race recording
+    /** Call once after each race to record this race’s results. */
+    public void recordRaceResult(int finishingTicks, int distance, double confAtEnd) {
+        finishingTimeHistory.add(finishingTicks);
+        avgSpeedHistory.add(distance / (double)Math.max(1, finishingTicks));
+        confidenceHistory.add(confAtEnd);
     }
+    // ──────────────────────────────────────────────────────────────────────────
 
-    public int getDistanceTravelled() {
-        return distanceTravelled;
-    }
-
+    // ──────────────────────────────────────────────────────────────────────────
+    // Accessors
     public String getName() {
         return name;
     }
@@ -79,8 +101,16 @@ public class Horse {
         return symbol;
     }
 
+    public int getDistanceTravelled() {
+        return distanceTravelled;
+    }
+
     public boolean hasFallen() {
         return hasFallen;
+    }
+
+    public double getConfidence() {
+        return confidence;
     }
 
     public String getBreed() {
@@ -92,30 +122,41 @@ public class Horse {
     }
 
     public int getFinishingTimeTicks() {
-    	return finishingTimeTicks;
-    }
-
-    public void incrementWins() {
-    	totalWins++;
+        return finishingTimeTicks;
     }
 
     public int getTotalWins() {
-    	return totalWins;
+        return totalWins;
     }
 
-    public void recordConfidence() {
-    	confidenceHistory.add(confidence);
+    // Historical getters
+    public List<Integer> getFinishingTimeHistory() {
+        return finishingTimeHistory;
+    }
+
+    public List<Double> getAvgSpeedHistory() {
+        return avgSpeedHistory;
     }
 
     public List<Double> getConfidenceHistory() {
-    	return confidenceHistory;
+        return confidenceHistory;
     }
 
+    // Track‐condition records
     public int getBestTimeForCondition(String condition) {
-    	return bestTimesByTrackCondition.getOrDefault(condition, -1);
+        return bestTimesByTrackCondition.getOrDefault(condition, -1);
     }
 
     public Map<String, Integer> getAllBestTimes() {
-    	return bestTimesByTrackCondition;
+        return bestTimesByTrackCondition;
     }
+
+    /** Reset per‐race fields (but keep history and best times). */
+    public void resetForRace() {
+        this.distanceTravelled    = 0;
+        this.hasFallen            = false;
+        this.finishingTimeTicks   = -1;
+        // confidence remains as last‐race end confidence
+    }
+    // ──────────────────────────────────────────────────────────────────────────
 }
