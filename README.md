@@ -12,7 +12,7 @@ Use the "cd" command to go to the directory "HorseRaceSimulator"
 
 It should be already in the branch "main", if not, type command "git switch main"
 
-Use the "cd" command to go to the directory "Textual"
+Use the "cd" command to go to the directory "Part1"
 
 All the java files should be already compiled, in case they are not compiled, or the compiled files can not be runned due to the different version of java compiler, run command "javac *.java" when you are in the directory "Textual"
 
@@ -32,7 +32,7 @@ Use cd command to go to directory "HorseRaceSimulator"
  
 The gui-development version should be already merged into main branch, if not, use command "git switch gui-development"
 
-Then use the "cd" command to go to the directory "gui-development"
+Then use the "cd" command to go to the directory "Part2"
 
 All the java files should be already compiled, in case they are not compiled, or the compiled files can not be runned due to the different version of java compiler, run command "javac *.java" when you are in the directory "gui-development"
 
