@@ -1,5 +1,7 @@
 import javax.swing.*;
 import java.awt.*;
+import java.util.Map;
+import java.util.HashMap;
 
 public class Race {
     private int raceLength;
@@ -7,6 +9,7 @@ public class Race {
     private Horse[] lanes;
     private boolean raceOngoing = true;
     private String weatherCondition;
+    private Map<Horse, Double> currentOdds = new HashMap<>();
 
     private int raceTicks = 0;  // ── NEW: count ticks in this race
 
@@ -60,6 +63,15 @@ public class Race {
                 raceOngoing = true;
             }
         }
+	updateOdds();
+    }
+
+    private void updateOdds() {
+        currentOdds = OddsCalculator.calculateOdds(lanes, weatherCondition);
+    }
+
+    public Map<Horse, Double> getCurrentOdds() {
+        return currentOdds;
     }
 
     public boolean isRaceOngoing() { return raceOngoing; }
