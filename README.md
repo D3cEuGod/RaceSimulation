@@ -8,7 +8,7 @@ For the textual project, you should run the main class by using terminal on mac,
 
 Use the "cd" command to go to the directory "Desktop", or "Download", wherever you store this git file
 
-Use the "cd" command to go to the directory "RaceSimulation"
+Use the "cd" command to go to the directory "HorseRaceSimulator"
 
 It should be already in the branch "main", if not, type command "git switch main"
 
@@ -28,7 +28,7 @@ For the GUI version, it is almost the same with the textual version, you should 
 
 Use the "cd" command to go to the directory "Desktop", or "Download", wherever you store this git file
 
-Use cd command to go to directory "RaceSimulation"
+Use cd command to go to directory "HorseRaceSimulator"
  
 The gui-development version should be already merged into main branch, if not, use command "git switch gui-development"
 
