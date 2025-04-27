@@ -6,6 +6,8 @@ RaceSimulation Project for OOP
 
 For the textual project, you should run the main class by using terminal on mac, or command prompt on windows.
 
+Use the "cd" command to go to the directory "Desktop", or "Download", wherever you store this git file
+
 Use the "cd" command to go to the directory "RaceSimulation"
 
 It should be already in the branch "main", if not, type command "git switch main"
@@ -24,9 +26,11 @@ We have a preset name and the confident values, in case you want to change, go t
 
 For the GUI version, it is almost the same with the textual version, you should run the main class by using terminal on mac, or command prompt on windows.
 
-Use cd command to go to directory "RaceSimulation"
+Use the "cd" command to go to the directory "Desktop", or "Download", wherever you store this git file
 
-Then use command "git switch gui-development"
+Use cd command to go to directory "RaceSimulation"
+ 
+The gui-development version should be already merged into main branch, if not, use command "git switch gui-development"
 
 Then use the "cd" command to go to the directory "gui-development"
 
