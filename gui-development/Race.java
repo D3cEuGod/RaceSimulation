@@ -2,6 +2,8 @@ import javax.swing.*;
 import java.awt.*;
 import java.util.Map;
 import java.util.HashMap;
+import java.util.List;
+import java.util.ArrayList;
 
 public class Race {
     private int raceLength;
@@ -10,6 +12,7 @@ public class Race {
     private boolean raceOngoing = true;
     private String weatherCondition;
     private Map<Horse, Double> currentOdds = new HashMap<>();
+    private List<Bet> bets = new ArrayList<>();
 
     private int raceTicks = 0;  // ── NEW: count ticks in this race
 
@@ -64,6 +67,10 @@ public class Race {
             }
         }
 	updateOdds();
+
+        if (!raceOngoing) {
+            settleBets();
+        }
     }
 
     private void updateOdds() {
@@ -72,6 +79,31 @@ public class Race {
 
     public Map<Horse, Double> getCurrentOdds() {
         return currentOdds;
+    }
+
+    public boolean placeBet(Horse h, double amount) {
+        Double odd = currentOdds.get(h);
+        if (h==null || odd==null || amount <= 0) return false;
+        Bet b = new Bet(h, amount, odd);
+        bets.add(b);
+        return true;
+    }
+
+    private void settleBets() {
+        // find winner exactly as in displayResultsInViewer
+        Horse winner = null; int maxDist = -1;
+        for (Horse h : lanes) {
+            if (h!=null && !h.hasFallen() && h.getDistanceTravelled()>maxDist) {
+                winner = h; maxDist = h.getDistanceTravelled();
+            }
+        }
+        for (Bet b : bets) {
+            b.settle(winner);
+        }
+    }
+
+    public List<Bet> getBetHistory() {
+        return new ArrayList<>(bets);
     }
 
     public boolean isRaceOngoing() { return raceOngoing; }

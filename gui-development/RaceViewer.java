@@ -2,17 +2,24 @@ import javax.swing.*;
 import java.awt.*;
 import java.util.Map;
 import java.util.HashMap;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
+import javax.swing.event.ListSelectionListener;
+import javax.swing.event.ListSelectionEvent;
+import java.util.List;
 
 public class RaceViewer extends JFrame {
     private Race race;
     private RacePanel racePanel;
     private OddsPanel oddsPanel;
+    private BettingPanel bettingPanel;
+    private BetHistoryPanel historyPanel;
     private Timer timer;
 
     public RaceViewer(Race race) {
         this.race = race;
         setTitle("🏁 Live Race View");
-        setSize(1000, 600);
+        setSize(1400, 600);
         setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
         setLayout(new BorderLayout());
 
@@ -21,6 +28,13 @@ public class RaceViewer extends JFrame {
 
         oddsPanel = new OddsPanel();
         add(oddsPanel, BorderLayout.EAST);
+
+        bettingPanel = new BettingPanel();
+        add(bettingPanel, BorderLayout.WEST);
+
+        // below odds, show history
+        historyPanel = new BetHistoryPanel();
+        add(historyPanel, BorderLayout.SOUTH);
 
         setVisible(true);
 
@@ -32,8 +46,10 @@ public class RaceViewer extends JFrame {
                 oddsPanel.updateOdds(race.getCurrentOdds());
                 racePanel.repaint();
                 oddsPanel.repaint();
+		bettingPanel.refreshHorseList();
             } else {
                 timer.stop();
+		historyPanel.refreshHistory();
                 race.displayResultsInViewer(this);
             }
         });
@@ -100,6 +116,84 @@ public class RaceViewer extends JFrame {
             }
 
             g.drawString("=".repeat(race.getRaceLength()), 10, 30 + race.getNumLanes() * 70);
+        }
+    }
+
+    private class BettingPanel extends JPanel {
+        private JComboBox<String> horseSelect;
+        private JTextField amountField;
+        private JButton placeBtn;
+
+        public BettingPanel() {
+            setLayout(new GridLayout(0,1,5,5));
+            setBorder(BorderFactory.createTitledBorder("Place Your Bet"));
+
+            horseSelect = new JComboBox<>();
+            refreshHorseList();
+
+            amountField = new JTextField("10");
+
+            placeBtn = new JButton("Place Bet");
+            placeBtn.addActionListener(new ActionListener() {
+                public void actionPerformed(ActionEvent e) {
+                    int idx = horseSelect.getSelectedIndex();
+                    Horse h = race.getHorseAtLane(idx);
+                    double amt;
+                    try { amt = Double.parseDouble(amountField.getText()); }
+                    catch(Exception ex){ JOptionPane.showMessageDialog(BettingPanel.this,
+                           "Invalid amount"); return; }
+                    boolean ok = race.placeBet(h, amt);
+                    if (!ok) {
+                        JOptionPane.showMessageDialog(BettingPanel.this,
+                           "Could not place bet");
+                    } else {
+                        JOptionPane.showMessageDialog(BettingPanel.this,
+                           "Bet placed on " + h.getName() + " at " +
+                           String.format("%.2f:1", race.getCurrentOdds().get(h)));
+                    }
+                }
+            });
+
+            add(new JLabel("Horse:"));
+            add(horseSelect);
+            add(new JLabel("Amount:"));
+            add(amountField);
+            add(placeBtn);
+        }
+
+        /** Call on every tick so the dropdown matches current lanes. */
+        public void refreshHorseList() {
+            horseSelect.removeAllItems();
+            for (int i = 0; i < race.getNumLanes(); i++) {
+                Horse h = race.getHorseAtLane(i);
+                if (h!=null) {
+                    horseSelect.addItem(h.getName());
+                }
+            }
+        }
+    }
+
+    private class BetHistoryPanel extends JPanel {
+        private DefaultListModel<Bet> model;
+        private JList<Bet> list;
+
+        public BetHistoryPanel() {
+            setLayout(new BorderLayout());
+            setBorder(BorderFactory.createTitledBorder("Bet History"));
+
+            model = new DefaultListModel<>();
+            list  = new JList<>(model);
+            list.setVisibleRowCount(5);
+            add(new JScrollPane(list), BorderLayout.CENTER);
+        }
+
+        /** Reloads the JList from race.getBetHistory() */
+        public void refreshHistory() {
+            model.clear();
+            List<Bet> all = race.getBetHistory();
+            for (Bet b : all) {
+                model.addElement(b);
+            }
         }
     }
 }
