@@ -43,3 +43,22 @@ cd Part2
 javac *.java
 java startRaceGUI
 ```
+
+## What I Learned
+
+- Designing classes using object-oriented principles
+- Separating simulation logic from visual display
+- Handling GUI updates during a race simulation
+- Improving maintainability through clearer class responsibilities
+
+## Screenshots
+
+### Text Version
+
+![Text Race View](docs/images/part1/Screenshot%202026-05-04%20at%2003.29.12.png)
+
+### GUI Version
+
+![GUI Race View 1](docs/images/part2/Screenshot%202026-05-04%20at%2003.31.21.png)
+![GUI Race View 2](docs/images/part2/Screenshot%202026-05-04%20at%2003.32.06.png)
+![GUI Race View 3](docs/images/part2/Screenshot%202026-05-04%20at%2003.32.37.png)
