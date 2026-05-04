@@ -25,3 +25,21 @@ This project was developed as part of an Object-Oriented Programming module and 
 Part1/  Text-based race simulation
 Part2/  GUI race simulation
 ```
+
+## How to Run
+
+### Text Version
+
+```bash
+cd Part1
+javac *.java
+java startRace
+```
+
+### GUI Version
+
+```bash
+cd Part2
+javac *.java
+java startRaceGUI
+```
